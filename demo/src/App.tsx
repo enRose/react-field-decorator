@@ -1,16 +1,7 @@
-# react-field-decorator
-
-[![npm (scoped)](https://img.shields.io/npm/v/@barin/react-field-decorator.svg)](https://www.npmjs.com/package/@barin/react-field-decorator)
-
-![](https://github.com/enRose/react-field-decorator/workflows/Node%20CI/badge.svg
-)
-
-# Example
-```
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { Decorator } from './components/field-decorator'
+import { Decorator } from '@barin/react-field-decorator'
 
 const App: React.FC = () => {
 
@@ -38,4 +29,3 @@ const App: React.FC = () => {
 }
 
 export default App;
-```
