@@ -4,15 +4,15 @@ export const policy: any = {
   number: (v: any) => /^\d+$/.test(v),
 }
 
-export const RuleEngine = (rules: any[], v: any) => {
+export const RuleEngine = (rules: any[], v: any, fields: any) => {
   const failedRule = rules.find(rule => {
-    const ok = policy[rule.type] && policy[rule.type](v)
+    let ok = policy[rule.type] && policy[rule.type](v)
 
-      && rule.required && policy.required(v)
+      || rule.required && policy.required(v)
 
-      && rule.validator && rule.validator(v)
+      || rule.validator && rule.validator(v, fields)
 
-    return ok === false ? true : false
+    return ok === false ? true : false 
   })
   return failedRule && failedRule.message
 }

@@ -1,15 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { Decorator } from '@barin/react-field-decorator'
+import React, { useEffect, useRef } from 'react'
+import { connect } from 'react-redux'
+import logo from './logo.svg'
+import './App.css'
+import { Decorator } from './components/field-decorator'
 
-const App: React.FC = () => {
+const App: React.FC = (props: any) => {
+
+  const ThanosNotAllowed = (v: string, otherValues: any) => {
+    const isValid = (v || '').indexOf('thanos') > -1 ? false : true
+
+    return isValid
+  }
 
   return (
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-       
+
+        <p className="error-text"> 
+          {props.fields && props.fields.validation['email']} 
+        </p>
+
         {Decorator('email', {
           rules: [
             {
@@ -20,12 +31,23 @@ const App: React.FC = () => {
               required: true,
               message: 'Please input your E-mail!',
             },
+            {
+              validator: ThanosNotAllowed,
+              message: 'Thanos is not allowed',
+            },
           ],
-        })(<input />)}
+        })(<input autoFocus />)}
         
       </header>
     </div>
   );
 }
 
-export default App;
+const mapStateToProps = (state: any) => {
+	return { fields: state.fields }
+}
+
+export default connect(
+  mapStateToProps,
+  null
+)(App)

@@ -15,25 +15,31 @@ export const Decorator = (id: string, config: any) => {
   return (fieldComponent: JSX.Element) => {
     // tslint:disable-next-line:no-shadowed-variable
     const f = ({ fields, onFieldChange }: any) => {
+      let validationError = null
+      
+      const onChange = (v: any) => {
+        validationError = RuleEngine(config.rules, v, fields)
+        onFieldChange(id, v, validationError)
+      }
 
       const extendedProps = {
         id,
 
-        type: config.rules && config.rules.find((r:any) => r.type).type || 'text',
+        type: config.rules && config.rules.find((r: any) => r.type).type || 'text',
 
         value: fields[id] || config.initialValue,
 
-        onChange: (e: any) => onFieldChange(id, e.target.value),
+        onChange: (e: any) => onChange(e.target.value),
 
         showError: fields.showError,
 
-        errorText: RuleEngine(config.rules, fields[id]),
+        errorText: validationError,
       }
 
       return React.cloneElement(fieldComponent, extendedProps)
     }
 
-    const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(f))
+    const el =connect(mapStateToProps, mapDispatchToProps)(f)
 
     return React.createFactory(el)()
   }
