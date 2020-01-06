@@ -1,6 +1,6 @@
 {
     "name": "@barin/react-field-decorator",
-    "version": "1.1.8",
+    "version": "1.2.0",
     "description": "A HOC for field validation",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",

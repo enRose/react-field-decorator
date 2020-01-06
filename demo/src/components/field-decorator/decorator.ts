@@ -15,15 +15,16 @@ export const Decorator = (id: string, config: any) => {
   return (fieldComponent: JSX.Element) => {
     // tslint:disable-next-line:no-shadowed-variable
     const f = ({ fields, onFieldChange }: any) => {
-      let validationError = null
-      
+      let failedRules
       const onChange = (v: any) => {
-        validationError = RuleEngine(config.rules, v, fields)
-        onFieldChange(id, v, validationError)
+        failedRules = RuleEngine(config.rules, v, fields)
+        onFieldChange(id, v, failedRules)
       }
 
       const extendedProps = {
         id,
+
+        name: id,
 
         type: config.rules && config.rules.find((r: any) => r.type).type || 'text',
 
@@ -33,7 +34,7 @@ export const Decorator = (id: string, config: any) => {
 
         showError: fields.showError,
 
-        errorText: validationError,
+        errorText: failedRules && 'Invalid input',
       }
 
       return React.cloneElement(fieldComponent, extendedProps)

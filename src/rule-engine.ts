@@ -1,18 +1,28 @@
-
 export const policy: any = {
   required: (v: any) => v !== null && v !== undefined && (v || '').trim() !== '',
   number: (v: any) => /^\d+$/.test(v),
 }
 
 export const RuleEngine = (rules: any[], v: any, fields: any) => {
-  const failedRule = rules.find(rule => {
+  let failedRules : any
+
+  rules.forEach((rule, index) => {
     const ok = policy[rule.type] && policy[rule.type](v)
 
       || rule.required && policy.required(v)
 
       || rule.validator && rule.validator(v, fields)
 
-    return ok === false ? true : false 
+      if (ok === false) {
+        const ruleName = rule.type && 'typeRule' ||
+        rule.required && 'requiredRule' ||
+        rule.validator && rule.name || index
+
+        failedRules = failedRules || {}
+        
+        failedRules[ruleName] = rule.message
+      }
   })
-  return failedRule && failedRule.message
+
+  return failedRules
 }
