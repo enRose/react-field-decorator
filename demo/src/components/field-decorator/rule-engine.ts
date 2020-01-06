@@ -6,7 +6,7 @@ export const policy: any = {
 
 export const RuleEngine = (rules: any[], v: any, fields: any) => {
   const failedRule = rules.find(rule => {
-    let ok = policy[rule.type] && policy[rule.type](v)
+    const ok = policy[rule.type] && policy[rule.type](v)
 
       || rule.required && policy.required(v)
 
