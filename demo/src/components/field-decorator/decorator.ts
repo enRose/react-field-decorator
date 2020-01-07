@@ -40,8 +40,8 @@ export const Decorator = (id: string, config: any) => {
       return React.cloneElement(fieldComponent, extendedProps)
     }
 
-    const el =connect(mapStateToProps, mapDispatchToProps)(f)
+    const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(f))
 
-    return React.createFactory(el)()
+    return React.createElement(el)
   }
 }
