@@ -144,7 +144,7 @@ rules: [
 ```
 If a rule is unnamed, a default name will be given.
 
-Rule engine will return a failed rule collection if any:
+Rule engine will return a failed rule collection as:
 ```
 {
   EarthRule: 'Thanos is on Earth',
@@ -171,7 +171,7 @@ export const onFieldChange = (id:any, value:any, failedRules:any) => ({
 ```
 
 ## Reducer
-It is up to you have to handle the state here is an example:
+It is up to you how to handle the state. Here is an example:
 ```
 import { ON_FIELD_CHANGE } from '../components/field-decorator/actions'
 
@@ -191,26 +191,9 @@ export default (state: any = {validation: {}}, action: any) => {
 ```
 
 
-## Example
+## Useage
 
 ```
-
-//reducer
-import { ON_FIELD_CHANGE } from '../components/field-decorator/actions'
-
-export default (state: any = {validation: {}}, action: any) => {
-    switch (action.type) {
-        case ON_FIELD_CHANGE:
-            const id =  action.payload.id
-            state[id] = action.payload.value
-            state.validation[id] = action.payload.failedRules
-            return {
-                ...state,
-            }
-        default:
-            return state
-    }
-}
 
 //component
 import React from 'react'
