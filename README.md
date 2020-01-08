@@ -77,7 +77,7 @@ Let's take a closer look at this returned function:
 
   const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(f))
 
-  return React.createFactory(el)()
+  return React.createElement(el)
 }
 ```
 
