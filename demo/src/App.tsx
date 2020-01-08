@@ -58,6 +58,7 @@ const App: React.FC = ({fields}: any) => {
               message: 'Thanos is in Asgard',
             },
           ],
+          initialValue: 'This is Earth'
         })(<input className="spacing" autoFocus />)}
 
         <label htmlFor="Asgard"> 
@@ -65,9 +66,7 @@ const App: React.FC = ({fields}: any) => {
         </label> 
         {Decorator('Asgard', {
           rules: [
-            {
-              type: 'text',
-            },
+            
           ],
         })(<input />)}
         

@@ -20,7 +20,7 @@ This HOC is to address the issues mentioned above in a declarative manner.
 
 ## Decorator
 
-The Decorator is a function takes two parameters: id of the wrapped component and configuration object. Configuration object has the structure of:
+The Decorator is a function takes two parameters: id of the wrapped component and configuration object. Configuration object has two properties: rules and initialValue.
 ```
 {
   rules: [
@@ -42,6 +42,7 @@ The Decorator is a function takes two parameters: id of the wrapped component an
       message: 'Thanos is in Asgard',
     },
   ],
+  initialValue: 'This is Earth'
 }
 ```
 And it returns a function that takes a React element as parameter. This returned function in turn returns a wrapped component with extended props: id, name, type, value, onChange.
@@ -49,7 +50,7 @@ And it returns a function that takes a React element as parameter. This returned
 Let's take a closer look at this returned function:
 ```
 (fieldComponent: JSX.Element) => {
-  const f = ({ fields, onFieldChange }: any) => {
+  const F = ({ fields, onFieldChange }: any) => {
     let failedRules
     const onChange = (v: any) => {
       failedRules = RuleEngine(config.rules, v, fields)
@@ -81,12 +82,12 @@ Let's take a closer look at this returned function:
 }
 ```
 
-The interesting part is the pure function const f. It declares a onChange handler in which validation rules are run, the validation result is dispatched together with field id and field value.
+The interesting part is the pure function const F. It declares a onChange handler in which validation rules are run, the validation result is dispatched together with field id and field value.
 
 We use cloneElement to extend props on the wrapped component.
 
 ```
-const f = ({ fields, onFieldChange }: any) => {
+const F = ({ fields, onFieldChange }: any) => {
   let failedRules
   const onChange = (v: any) => {
     failedRules = RuleEngine(config.rules, v, fields)
