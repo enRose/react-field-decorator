@@ -11,7 +11,7 @@ const mapDispatchToProps = {
   onFieldChange,
 }
 
-export const Decorator = (id: string, config: any) => {
+export const Decorator = (id: string, config: any = {rules:[]}) => {
   return (fieldComponent: JSX.Element) => {
     // tslint:disable-next-line:no-shadowed-variable
     const F = ({ fields, onFieldChange }: any) => {

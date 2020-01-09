@@ -5,6 +5,10 @@
 ![npm publish](https://github.com/enRose/react-field-decorator/workflows/npmpublish/badge.svg
 )
 
+## Contribution
+
+Please help me to make it better by reporting [bugs](https://github.com/enRose/react-field-decorator/issues) or [contributing](https://github.com/enRose/react-field-decorator) to the source. Thank you!
+
 ## Motivation
 
 - When we have a lot of controlled components say custom Input, Select or Radio button that dispatch state to parent. We don't want to repetitively set onChange on each one of them.
