@@ -1,6 +1,7 @@
 export const policy: any = {
   required: (v: any) => v !== null && v !== undefined && (v || '').trim() !== '',
   number: (v: any) => /^\d+$/.test(v),
+  email: (v:string) => v && v.indexOf('@') > -1,
 }
 
 export const RuleEngine = (rules: any[], v: any, fields: any) => {

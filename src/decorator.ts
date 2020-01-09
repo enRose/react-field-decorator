@@ -18,7 +18,7 @@ export const Decorator = (id: string, config: any = {rules:[]}) => {
       let failedRules
       const onChange = (v: any) => {
         failedRules = RuleEngine(config.rules, v, fields)
-        onFieldChange(id, v, failedRules)
+        onFieldChange(id, v, failedRules, config.groupId)
       }
 
       const extendedProps = {
@@ -42,6 +42,6 @@ export const Decorator = (id: string, config: any = {rules:[]}) => {
 
     const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(F))
 
-    return React.createElement(el)
+    return config.show === false ? null : React.createElement(el)
   }
 }

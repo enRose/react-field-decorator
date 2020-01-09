@@ -11,14 +11,14 @@ const mapDispatchToProps = {
   onFieldChange,
 }
 
-export const Decorator = (id: string, config: any) => {
+export const Decorator = (id: string, config: any = {rules:[]}) => {
   return (fieldComponent: JSX.Element) => {
     // tslint:disable-next-line:no-shadowed-variable
     const F = ({ fields, onFieldChange }: any) => {
       let failedRules
       const onChange = (v: any) => {
         failedRules = RuleEngine(config.rules, v, fields)
-        onFieldChange(id, v, failedRules)
+        onFieldChange(id, v, failedRules, config.groupId)
       }
 
       const extendedProps = {
@@ -42,6 +42,6 @@ export const Decorator = (id: string, config: any) => {
 
     const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(F))
 
-    return React.createElement(el)
+    return config.show === false ? null : React.createElement(el)
   }
 }
