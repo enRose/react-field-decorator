@@ -18,7 +18,7 @@ export const Decorator = (id: string, config: any = {rules:[]}) => {
       let failedRules
       const onChange = (v: any) => {
         failedRules = RuleEngine(config.rules, v, fields)
-        onFieldChange(id, v, failedRules, config.groupId)
+        onFieldChange(id, v, failedRules, config.correlationId)
       }
 
       const extendedProps = {

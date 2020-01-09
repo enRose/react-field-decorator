@@ -40,7 +40,7 @@ const App: React.FC = ({ fields }: any) => {
         Earth:
         </label>
       {Decorator('Earth', {
-        groupId: 'marvel',
+        correlationId: 'marvel',
         rules: [
           {
             type: 'text',
@@ -67,7 +67,7 @@ const App: React.FC = ({ fields }: any) => {
         Asgard:
         </label>
       {Decorator('Asgard', {
-        groupId: 'marvel',
+        correlationId: 'marvel',
         rules: [
         ],
       })(<input />)}
