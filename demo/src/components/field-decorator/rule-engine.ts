@@ -8,21 +8,29 @@ export const RuleEngine = (rules: any[], v: any, fields: any) => {
   let failedRules : any
 
   rules.forEach((rule, index) => {
-    const ok = policy[rule.type] && policy[rule.type](v)
+    let ok
+    
+    if (policy[rule.type]) {
+      ok = policy[rule.type](v)
+    }
 
-      || rule.required && policy.required(v)
+    if (rule.required) {
+      ok = policy.required(v)
+    }
 
-      || rule.validator && rule.validator(v, fields)
+    if (rule.validator) {
+      ok = rule.validator(v, fields)
+    }
+  
+    if (ok === false) {
+      const ruleName = rule.type && 'typeRule' ||
+      rule.required && 'requiredRule' ||
+      rule.validator && rule.name || index
 
-      if (ok === false) {
-        const ruleName = rule.type && 'typeRule' ||
-        rule.required && 'requiredRule' ||
-        rule.validator && rule.name || index
-
-        failedRules = failedRules || {}
-        
-        failedRules[ruleName] = rule.message
-      }
+      failedRules = failedRules || {}
+      
+      failedRules[ruleName] = rule.message
+    }
   })
 
   return failedRules
