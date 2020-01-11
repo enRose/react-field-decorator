@@ -20,13 +20,16 @@ This HOC is to address the issues mentioned above in a declarative manner.
 ## Prerequisites
 
 - Redux store is configured
-- A reducer for state dispatched from the HOC
+- A reducer handles state dispatched from the HOC
 
 ## Decorator
 
-The Decorator is a function takes two parameters: id of the wrapped component and configuration object. Configuration object has two properties: rules and initialValue.
+The Decorator is a function takes two parameters: id of the wrapped component and configuration object. Configuration object has properties of: rules, initialValue, correlationId and show - visibility toggle.
 ```
 {
+  correlationId: 'Marvel',
+  show: () => true,
+  initialValue: 'This is Earth',
   rules: [
     {
       type: 'text',
@@ -46,43 +49,40 @@ The Decorator is a function takes two parameters: id of the wrapped component an
       message: 'Thanos is in Asgard',
     },
   ],
-  initialValue: 'This is Earth'
 }
 ```
-And it returns a function that takes a React element as parameter. This returned function in turn returns a wrapped component with extended props: id, name, type, value, onChange.
+And it returns a HOC function that takes a React element as parameter. This returned function in turn returns the wrapped component with extended props: id, name, type, value, onChange.
 
 Let's take a closer look at this returned function:
 ```
 (fieldComponent: JSX.Element) => {
+  // tslint:disable-next-line:no-shadowed-variable
   const F = ({ fields, onFieldChange }: any) => {
     let failedRules
     const onChange = (v: any) => {
       failedRules = RuleEngine(config.rules, v, fields)
-      onFieldChange(id, v, failedRules)
+      onFieldChange(id, v, failedRules, config.correlationId)
     }
 
     const extendedProps = {
       id,
-
       name: id,
-
-      type: config.rules && config.rules.find((r: any) => r.type).type || 'text',
-
-      value: fields[id] || config.initialValue,
-
+      type: config.rules && (config.rules.find((r: any) => r.type) || {}).type || 'text',
+      value: fields[id] === undefined ? config.initialValue : fields[id],
       onChange: (e: any) => onChange(e.target.value),
-
-      showError: fields.showError,
-
-      errorText: failedRules && 'Invalid input',
     }
 
     return React.cloneElement(fieldComponent, extendedProps)
   }
 
-  const el = React.memo(connect(mapStateToProps, mapDispatchToProps)(f))
+  const el = React.memo(connect(
+    (state: any) => ({
+      fields: state.fields,
+    }), 
+    { onFieldChange },
+  )(F))
 
-  return React.createElement(el)
+  return config.show === false ? null : React.createElement(el)
 }
 ```
 
@@ -95,23 +95,15 @@ const F = ({ fields, onFieldChange }: any) => {
   let failedRules
   const onChange = (v: any) => {
     failedRules = RuleEngine(config.rules, v, fields)
-    onFieldChange(id, v, failedRules)
+    onFieldChange(id, v, failedRules, config.correlationId)
   }
 
   const extendedProps = {
     id,
-
     name: id,
-
-    type: config.rules && config.rules.find((r: any) => r.type).type || 'text',
-
-    value: fields[id] || config.initialValue,
-
+    type: config.rules && (config.rules.find((r: any) => r.type) || {}).type || 'text',
+    value: fields[id] === undefined ? config.initialValue : fields[id],
     onChange: (e: any) => onChange(e.target.value),
-
-    showError: fields.showError,
-
-    errorText: failedRules && 'Invalid input',
   }
 
   return React.cloneElement(fieldComponent, extendedProps)
@@ -120,7 +112,12 @@ const F = ({ fields, onFieldChange }: any) => {
 
 Then we connect this function component to redux.
 ```
-React.memo(connect(mapStateToProps, mapDispatchToProps)(f))
+const el = React.memo(connect(
+  (state: any) => ({
+    fields: state.fields,
+  }), 
+  { onFieldChange },
+)(F))
 ```
 
 Because we are not using JSX, so we call createElement.
@@ -169,122 +166,133 @@ const onChange = (v: any) => {
 ```
 export const ON_FIELD_CHANGE = 'ON_FIELD_CHANGE'
 
-export const onFieldChange = (id:any, value:any, failedRules:any) => ({
+export const onFieldChange = (id:any, value:any, failedRules:any, correlationId:any) => ({
     type: ON_FIELD_CHANGE,
-    payload: {id, value, failedRules},
+    payload: {id, value, failedRules, correlationId},
 })
 ```
 
 ## Reducer
-It is up to you how to handle the state. Here is an example:
+
+It is up to you how to handle the state. Here is an example. The key is NOT to mutate/assign nested objects in state, always deep clone if you need to handle nested properties. Object.assign only shallow-copies. You can use spread operator, in here we use lodash.
+
 ```
+import * as _ from 'lodash'
 import { ON_FIELD_CHANGE } from '../components/field-decorator/actions'
 
-export default (state: any = {validation: {}}, action: any) => {
-    switch (action.type) {
-        case ON_FIELD_CHANGE:
-            const id =  action.payload.id
-            state[id] = action.payload.value
-            state.validation[id] = action.payload.failedRules
-            return {
-                ...state,
-            }
-        default:
-            return state
-    }
+export default (fields: any = { validation: {} }, action: any) => {
+  switch (action.type) {
+    case ON_FIELD_CHANGE:
+      const id = action.payload.id
+      const correlationId = action.payload.correlationId
+      let next = _.cloneDeep(fields)
+
+      next[id] = action.payload.value
+      if (action.payload.failedRules) {
+          next.validation[id] = action.payload.failedRules
+      }
+      
+      if (correlationId && action.payload.failedRules) {
+          next.validation[correlationId] = next.validation[correlationId] || {}
+          next.validation[correlationId][id] = action.payload.failedRules
+      }
+      
+      return next
+    default:
+      return fields
+  }
 }
 ```
-
 
 ## Useage
 
 ```
-
-//component
 import React from 'react'
 import { connect } from 'react-redux'
-import logo from './logo.svg'
 import './App.css'
 import { Decorator } from './components/field-decorator'
+import * as _ from 'lodash'
 
-const App: React.FC = ({fields}: any) => {
+const App: React.FC = ({ validation }: any) => {
 
-  const IsThanosOnEarth = (v: string, otherValues: any) => {
+  const IsThanosOnEarth = (v: string) => {
     const isValid = (v || '').trim()
       .indexOf('thanos') > -1 ? false : true
 
     return isValid
   }
 
-  const IsThanosInAsgard = (v: string, otherValues: any) => {
-    const isValid = (otherValues['Asgard'] || '').trim()
+  const IsThanosInAsgard = (v: string, fields:any) => {
+    const isValid = (fields['Asgard'] || '').trim()
       .indexOf('thanos') > -1 ? false : true
 
     return isValid
   }
 
-  const errs = fields && fields.validation['Earth'] || {}
+  const earthErrors = validation['Earth'] || {}
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+    <div className="App" key='app' >
+      <p>
+        {earthErrors['requiredRule']}
+      </p>
 
-        <p className="error-text"> 
-          {errs['EarthRule']}
-        </p>
+      <p>
+        {earthErrors['EarthRule']}
+      </p>
 
-        <p className="error-text"> 
-          {errs['AsgardRule']} 
-        </p>
+      <p>
+        {earthErrors['AsgardRule']}
+      </p>
 
-        <label htmlFor="Earth"> 
-          Earth 
-        </label> 
-        {Decorator('Earth', {
-          rules: [
-            {
-              type: 'text',
-            },
-            {
-              required: true,
-              message: 'Please input your name!',
-            },
-            {
-              name: 'EarthRule',
-              validator: IsThanosOnEarth,
-              message: 'Thanos is on Earth',
-            },
-            {
-              name: 'AsgardRule',
-              validator: IsThanosInAsgard,
-              message: 'Thanos is in Asgard',
-            },
-          ],
-        })(<input className="spacing" autoFocus />)}
+      <label htmlFor="Earth">
+        Earth:
+        </label>
 
-        <label htmlFor="Asgard"> 
-          Asgard 
-        </label> 
-        {Decorator('Asgard', {
-          rules: [
-            {
-              type: 'text',
-            },
-          ],
-        })(<input />)}
-        
-      </header>
+      {Decorator('Earth', {
+        correlationId: 'marvel',
+        rules: [
+          {
+            type: 'text',
+          },
+          {
+            required: true,
+            message: 'Please enter a Marvel name!',
+          },
+          {
+            name: 'EarthRule',
+            validator: IsThanosOnEarth,
+            message: 'Thanos is on Earth',
+          },
+          {
+            name: 'AsgardRule',
+            validator: IsThanosInAsgard,
+            message: 'Thanos is in Asgard',
+          },
+        ],
+        initialValue: 'This is Earth'
+      })(<input key='earth' className="spacing" />)}
+   
+      <label htmlFor="Asgard">
+        Asgard:
+        </label>
+      {Decorator('Asgard', {
+        correlationId: 'marvel',
+        rules: [
+        ],
+      })(<input />)}
     </div>
   );
 }
 
-const mapStateToProps = (state: any) => {
-	return { fields: state.fields }
-}
-
 export default connect(
-  mapStateToProps,
-  null
+  (state: any) => ({
+    validation: state.fields.validation
+  }), 
+  null, null, {
+    pure: true,
+    areStatesEqual: (next, prev) => {
+      return _.isEqual(next.fields.validation, prev.fields.validation)  
+  }}
 )(App)
 ```
