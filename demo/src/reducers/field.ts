@@ -1,3 +1,4 @@
+import * as _ from 'lodash'
 import { ON_FIELD_CHANGE } from '../components/field-decorator/actions'
 
 export default (fields: any = { validation: {} }, action: any) => {
@@ -5,18 +6,19 @@ export default (fields: any = { validation: {} }, action: any) => {
         case ON_FIELD_CHANGE:
             const id = action.payload.id
             const correlationId = action.payload.correlationId
+            let next = _.cloneDeep(fields)
 
-            fields[id] = action.payload.value
-            fields.validation[id] = action.payload.failedRules
-            
-            if (correlationId) {
-                fields.validation[correlationId] = fields.validation[correlationId] || {}
-                fields.validation[correlationId][id] = action.payload.failedRules
+            next[id] = action.payload.value
+            if (action.payload.failedRules) {
+                next.validation[id] = action.payload.failedRules
             }
             
-            return {
-                ...fields,
+            if (correlationId && action.payload.failedRules) {
+                next.validation[correlationId] = next.validation[correlationId] || {}
+                next.validation[correlationId][id] = action.payload.failedRules
             }
+            
+            return next
         default:
             return fields
     }

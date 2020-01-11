@@ -1,29 +1,29 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import logo from './logo.svg'
 import './App.css'
 import { Decorator } from './components/field-decorator'
+import * as _ from 'lodash'
 
-const App: React.FC = ({ fields }: any) => {
+const App: React.FC = ({ validation }: any) => {
 
-  const IsThanosOnEarth = (v: string, otherValues: any) => {
+  const IsThanosOnEarth = (v: string) => {
     const isValid = (v || '').trim()
       .indexOf('thanos') > -1 ? false : true
 
     return isValid
   }
 
-  const IsThanosInAsgard = (v: string, otherValues: any) => {
-    const isValid = (otherValues['Asgard'] || '').trim()
+  const IsThanosInAsgard = (v: string, fields:any) => {
+    const isValid = (fields['Asgard'] || '').trim()
       .indexOf('thanos') > -1 ? false : true
 
     return isValid
   }
 
-  const earthErrors = fields && fields.validation['Earth'] || {}
+  const earthErrors = validation['Earth'] || {}
 
   return (
-    <div className="App">
+    <div className="App" key='app' >
       <p>
         {earthErrors['requiredRule']}
       </p>
@@ -39,6 +39,7 @@ const App: React.FC = ({ fields }: any) => {
       <label htmlFor="Earth">
         Earth:
         </label>
+
       {Decorator('Earth', {
         correlationId: 'marvel',
         rules: [
@@ -61,8 +62,8 @@ const App: React.FC = ({ fields }: any) => {
           },
         ],
         initialValue: 'This is Earth'
-      })(<input className="spacing" autoFocus />)}
-
+      })(<input key='earth' className="spacing" />)}
+   
       <label htmlFor="Asgard">
         Asgard:
         </label>
@@ -75,11 +76,13 @@ const App: React.FC = ({ fields }: any) => {
   );
 }
 
-const mapStateToProps = (state: any) => {
-  return { fields: state.fields }
-}
-
 export default connect(
-  mapStateToProps,
-  null
+  (state: any) => ({
+    validation: state.fields.validation
+  }), 
+  null, null, {
+    pure: true,
+    areStatesEqual: (next, prev) => {
+      return _.isEqual(next.fields.validation, prev.fields.validation)  
+  }}
 )(App)
