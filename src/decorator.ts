@@ -1,12 +1,30 @@
-import React from 'react'
+import React, {useRef, useLayoutEffect, useCallback} from 'react'
 import { connect } from 'react-redux'
 import { onFieldChange } from './actions'
 import { RuleEngine } from './rule-engine'
+
+/*
+useEffect hook effect might run after several renders asynchronously.
+For this case we should use useLayoutEffect hook which runs immediately
+after each render and in addition this logic doesn’t block painting. 
+*/
+const usePrevious = (value: any) => {
+  const ref = useRef()
+  useLayoutEffect(() => {
+    ref.current = value
+  })
+  return ref.current
+}
 
 export const Decorator = (id: string, config: any = {rules:[]}) => {
   return (fieldComponent: JSX.Element) => {
     // tslint:disable-next-line:no-shadowed-variable
     const F = ({ fields, onFieldChange }: any) => {
+      const prevValue = usePrevious(fields[id])
+      const callbackRef = useCallback(el => {
+        el && prevValue !== fields[id] && el.focus()
+      }, [])
+
       let failedRules
       const onChange = (v: any) => {
         failedRules = RuleEngine(config.rules, v, fields)
@@ -14,6 +32,7 @@ export const Decorator = (id: string, config: any = {rules:[]}) => {
       }
 
       const extendedProps = {
+        ref: callbackRef,
         id,
         name: id,
         type: config.rules && (config.rules.find((r: any) => r.type) || {}).type || 'text',
