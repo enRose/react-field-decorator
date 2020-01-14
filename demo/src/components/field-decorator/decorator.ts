@@ -21,8 +21,10 @@ export const Decorator = (id: string, config: any = {rules:[]}) => {
     // tslint:disable-next-line:no-shadowed-variable
     const F = ({ fields, onFieldChange }: any) => {
       const prevValue = usePrevious(fields[id])
-      const callbackRef = useCallback(el => {
-        el && prevValue !== fields[id] && el.focus()
+      const callbackRef = useCallback(node => {
+        if (node && prevValue !== fields[id]) {
+          node.focus()
+        }
       }, [])
 
       let failedRules
