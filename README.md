@@ -25,7 +25,8 @@ This HOC is to address the issues mentioned above in a declarative manner.
 ## Decorator
 
 The Decorator is a function takes two parameters: id of the wrapped component and configuration object. Configuration object has properties of: rules, initialValue, correlationId and show - visibility toggle.
-```
+
+```typescript
 {
   correlationId: 'Marvel',
   show: () => true,
@@ -51,10 +52,12 @@ The Decorator is a function takes two parameters: id of the wrapped component an
   ],
 }
 ```
-And it returns a HOC function that takes a React element as parameter. This returned function in turn returns the wrapped component with extended props: id, name, type, value, onChange.
+
+And it returns an HOC function that takes a React element as parameter. This returned function in turn returns the wrapped component with extended props: id, name, type, value, onChange.
 
 Let's take a closer look at this returned function:
-```
+
+```typescript
 (fieldComponent: JSX.Element) => {
   // tslint:disable-next-line:no-shadowed-variable
   const F = ({ fields, onFieldChange }: any) => {
@@ -78,7 +81,7 @@ Let's take a closer look at this returned function:
   const el = React.memo(connect(
     (state: any) => ({
       fields: state.fields,
-    }), 
+    }),
     { onFieldChange },
   )(F))
 
@@ -90,7 +93,7 @@ The interesting part is the pure function const F. It declares a onChange handle
 
 We use cloneElement to extend props on the wrapped component.
 
-```
+```typescript
 const F = ({ fields, onFieldChange }: any) => {
   let failedRules
   const onChange = (v: any) => {
@@ -111,7 +114,8 @@ const F = ({ fields, onFieldChange }: any) => {
 ```
 
 Then we connect this function component to redux.
-```
+
+```typescript
 const el = React.memo(connect(
   (state: any) => ({
     fields: state.fields,
@@ -121,21 +125,26 @@ const el = React.memo(connect(
 ```
 
 Because we are not using JSX, so we call createElement.
-```
+
+```typescript
 React.createElement(el)
 ```
 
 ## Rule engine
+
 There are three types of validation rules: required, type (number, email, etc.) and custom validator.
 
 Rule engine runs through each rule, if a rule returns false meaning invalid, it will be added into failed rule collection in the structure of:
-```
+
+```typescript
 {
   ruleName: 'error message'
 }
 ```
+
 We can supply a rule name as:
-```
+
+```typescript
 rules: [
   {
     name: 'AsgardRule',
@@ -144,17 +153,21 @@ rules: [
   },
 ],
 ```
+
 If a rule is unnamed, a default name will be given.
 
 Rule engine will return a failed rule collection as:
-```
+
+```typescript
 {
   EarthRule: 'Thanos is on Earth',
   AsgardRule: 'Thanos is in Asgard',
 }
 ```
+
 Failed rules will then be dispatched:
-```
+
+```typescript
 const onChange = (v: any) => {
   failedRules = RuleEngine(config.rules, v, fields)
   onFieldChange(id, v, failedRules)
@@ -163,7 +176,7 @@ const onChange = (v: any) => {
 
 ## Action creator
 
-```
+```typescript
 export const ON_FIELD_CHANGE = 'ON_FIELD_CHANGE'
 
 export const onFieldChange = (id:any, value:any, failedRules:any, correlationId:any) => ({
@@ -176,7 +189,7 @@ export const onFieldChange = (id:any, value:any, failedRules:any, correlationId:
 
 It is up to you how to handle the state. Here is an example. The key is NOT to mutate/assign nested objects in state, always deep clone if you need to handle nested properties. Object.assign only shallow-copies. You can use spread operator, in here we use lodash.
 
-```
+```typescript
 import * as _ from 'lodash'
 import { ON_FIELD_CHANGE } from '../components/field-decorator/actions'
 
@@ -191,12 +204,12 @@ export default (fields: any = { validation: {} }, action: any) => {
       if (action.payload.failedRules) {
           next.validation[id] = action.payload.failedRules
       }
-      
+
       if (correlationId && action.payload.failedRules) {
           next.validation[correlationId] = next.validation[correlationId] || {}
           next.validation[correlationId][id] = action.payload.failedRules
       }
-      
+
       return next
     default:
       return fields
@@ -206,7 +219,7 @@ export default (fields: any = { validation: {} }, action: any) => {
 
 ## Useage
 
-```
+```typescript
 import React from 'react'
 import { connect } from 'react-redux'
 import './App.css'
@@ -288,7 +301,7 @@ const App: React.FC = ({ validation }: any) => {
 export default connect(
   (state: any) => ({
     validation: state.fields.validation
-  }), 
+  }),
   null, null, {
     pure: true,
     areStatesEqual: (next, prev) => {
